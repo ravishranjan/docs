@@ -10,6 +10,19 @@ paths:
         "EXPERIMENTAL: Returns a list of all the models"
       produces:
         - application/json
+      parameters:
+        - in: query
+          name: effective
+          type: boolean
+          default: false
+          required: false
+          description: If true then implict and explicit models will be merged in the response.
+        - in: query
+          name: verbose
+          type: boolean
+          default: true
+          required: false
+          description: If false then only the id and name of the models and entity types will be returned
       responses:
         200:
           description: An array of models
@@ -62,6 +75,18 @@ paths:
           description: The id of the model
           required: true
           type: string
+        - in: query
+          name: effective
+          type: boolean
+          default: false
+          required: false
+          description: If true then implict and explicit models will be merged in the response.
+        - in: query
+          name: verbose
+          type: boolean
+          default: true
+          required: false
+          description: If false then only the id and name of the model and entity types will be returned
       responses:
         200:
           description: The model
@@ -82,6 +107,36 @@ paths:
       responses:
         200:
           description: OK
+
+  '/models/{model_id}/{entity_type_id}':
+    get:
+      operationId: api.models.get_entity_type
+      description:
+        "EXPERIMENTAL: Returns the specified entity type in a model"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: model_id
+          description: The id of the model
+          required: true
+          type: string
+        - in: path
+          name: entity_type_id
+          description: The id of the entity type
+          required: true
+          type: string
+        - in: query
+          name: effective
+          type: boolean
+          default: false
+          required: false
+          description: If true then implict and explicit models will be merged in the response.
+      responses:
+        200:
+          description: The entity type
+          schema:
+            $ref: '#/definitions/EntityType'
 
   /pipes:
     get:
@@ -339,9 +394,15 @@ paths:
               Starts a new run of the pump. A pump is typically run automatically at scheduled intervals, but with this
               operation a pump can be started manually.
 
+          "rescan":
+
+              Starts a new rescan, unless a rescan is already running. If a normal pump-run is already running, it will
+              be stopped before the rescan starts.
+
           "stop":
 
-              Stops the pump, if it is running. If the pump is not already running, this operation has no effect.
+              Stops the pump, if it is running (both rescans and normal pump runs are stopped). If the pump is not
+              running, this operation has no effect.
 
           "enable":
 
@@ -1215,7 +1276,7 @@ paths:
       responses:
         200:
           description: OK
-        500:
+        503:
           description: The sesam-node isn't feeling well.
 
   '/ping':
@@ -2557,6 +2618,9 @@ definitions:
     type: object
 
   Model:
+    type: object
+
+  EntityType:
     type: object
 
   ServiceMetadata:
