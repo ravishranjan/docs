@@ -7632,6 +7632,7 @@ they are formatted in the :doc:`Cron Expressions <cron-expressions>` document.
      -
      -
 
+       .. _pump_rescan_run_count:
    * - ``rescan_run_count``
      - Integer(>=1)
      - How many times the pump should run before scheduling a complete rescan of the source of the pipe that the pump
@@ -7639,6 +7640,7 @@ they are formatted in the :doc:`Cron Expressions <cron-expressions>` document.
      -
      -
 
+       .. _pump_rescan_cron_expression:
    * - ``rescan_cron_expression``
      - String
      - A cron expression that indicates when the pump should schedule a full rescan of the source of the pipe the pump
@@ -7859,3 +7861,51 @@ A scheduled pump running every 5 minutes from 14:00 and ending at 14:55, AND fir
            "cron_expression": "0/5 14,18 * * ?"
        }
     }
+
+
+Rescans
+-------
+
+Definition of terms:
+
+Incremental run:
+  This is what a pump does when it is started when the stored "last_seen" value
+  is set to a non-empty value, i.e. the pipe will only process source-entities that has appeared after the
+  previous run of the pipe.
+
+Rescan:
+  This is what a pump does when it is started by the :ref:`rescan_cron_expression <pump_rescan_cron_expression>` or
+  :ref:`rescan_run_count <pump_rescan_run_count>` config-properties (or if it is started by the "rescan" pump-operation).
+  It will process all the source-entities, and do deletion tracking when finished.
+
+Reset/Full run:
+  This is what a pump does when the user has explicitly reset the pipe. It will process all the source-entities,
+  and do deletion tracking when finished.
+
+
+An incremental run can be started while a rescan is running. The use-case is that the user wants new entities to flow
+through the pipe as quickly as possible, but the user also wants to reprocess *all* the source entities. The latter
+can be very time-consuming, and sometimes it is not an option to simply reset the pipe to reprocess everything.
+
+Example: The pipe reads from a sql database-table that has an "last_modified_time"-column, but no "deleted" column;
+new and modified rows can be selected with a an appropriate sql-statement, but there is no way to query the sql
+database for deleted rows. In this case a rescan can be used to detect deleted row, while incremental runs can
+be used to process new rows at the same time.
+
+
+If a rescan is started while an incremental run is in progress, the incremental run will be interrupted and
+restarted once the rescan has been started.
+
+If an incremental run in started while a rescan is in progress, the incremental run will only start if the rescan
+hasn't already passed the "last_seen" offset.
+If an incremental run has been started while a rescan was in progress, the rescan will stop processing entities
+when it reaches the "last_seen" offset. If no incremental run has been started, the rescan will proceed past
+the "last_seen" offset and start to update the stored "last_seen" value.
+
+Only one incremental run can be active at once, but once an incremental run has finished a new incremental run can be started.
+
+The incremental run will not do retries, since the rescan will reprocess any previously failed entities.
+The incremental run will do dependency tracking.
+
+The rescan will not overwrite any entities that have been written by an incremental run.
+
