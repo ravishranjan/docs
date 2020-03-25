@@ -546,7 +546,7 @@ Properties
      - Req
 
    * - ``reprocessing_policy``
-     - Enum<String> 
+     - Enum<String>
      - Specifies the policy that the pipe uses to decide if a pipe needs to be reset or not.
 
        - ``continue`` (the default) means that the pipe will continue processing input entities, and not reset the pipe, even though there might be factors indicating the the pipe should be reset.
@@ -968,7 +968,7 @@ Properties
 
        See also the :ref:`dataset sink <dataset_sink>` property ``set_initial_offset``.
      -
-     - 
+     -
 
    * - ``equality``
      - List<EqFunctions{>=0}>
@@ -1235,7 +1235,7 @@ source, except ``datasets`` can be a list of datasets ids.
 
        See also the :ref:`dataset sink <dataset_sink>` property ``set_initial_offset``.
      -
-     - 
+     -
 
    * - ``include_previous_versions``
      - Boolean
@@ -1358,7 +1358,7 @@ strategy.
 
        See also the :ref:`dataset sink <dataset_sink>` property ``set_initial_offset``.
      -
-     - 
+     -
 
    * - ``strategy``
      - String
@@ -1488,7 +1488,7 @@ be a list of datasets ids.
 
        See also the :ref:`dataset sink <dataset_sink>` property ``set_initial_offset``.
      -
-     - 
+     -
 
    * - ``whitelist``
      - List<String>
@@ -3703,6 +3703,211 @@ it will produce the transformed entity:
     }]
     "rdf": "<http://x.org/1> <http://x.org/name> \"Entity 1\".\n<http://x.org/1> <http://x.org/id> \"entity-1\".\n<http://x.org/1> <http://foo.org/child> _:x1.\n_:x1 <http://x.org/id> \"child\".\n"
   }
+
+.. _REST_transform:
+
+The REST transform
+-----------------
+
+This is a data sink that can communicate with a REST service using HTTP requests.
+
+Note that the shape of the entities piped to this sink must conform to certain criteria, see the
+:ref:`notes <rest_expected_rest_entity_shape>` later in the section.
+
+Prototype
+^^^^^^^^^
+
+::
+
+    {
+        "type": "rest",
+        "system" : "rest-system",
+    }
+
+
+Properties
+^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10, 10, 60, 10, 3
+
+   * - Property
+     - Type
+     - Description
+     - Default
+     - Req
+
+
+   * - ``system``
+     - String
+     - The id of the :ref:`REST system <rest_system>` to use.
+     -
+     - Yes
+
+.. _rest_expected_rest_entity_shape:
+
+Expected entity shape
+^^^^^^^^^^^^^^^^^^^^^
+
+The entities must be transformed into a particular form before being piped to the RESTsink. The general form
+expected is:
+
+::
+
+  {
+    "_id": "1",
+    "properties": {
+        "foo": "bar",
+        "zoo": 1,
+        "baz": [1,2,3]
+    },
+    "operation": "some-named-operation",
+    "payload": "<some>string-value</some>"
+  }
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10, 10, 60, 10, 3
+
+   * - Property
+     - Type
+     - Description
+     - Default
+     - Req
+
+
+   * - ``properties``
+     - Object
+     - Any non-payload properties you need should go into the toplevel child entity ``properties``. You can then address
+       these properties in the Jinja templates for operation ``url`` properties using the "{{ properties.key_name }}" syntax.
+     -
+     -
+
+   * - ``operation``
+     - String
+     - The contents of this property must refer to one of the named ``operations`` registered with the sink's :ref:`REST system <rest_system>`.
+     -
+     - Yes
+
+   * - ``payload``
+     - String or Object
+     - The payload for the operation specified. It can be a string or an object. You can also omit it, in which case
+       the empty string will be used instead (for example for "DELETE" methods). All string payloads will be encoded
+       as UTF-8.
+     -
+     -
+
+
+Example entities:
+
+String as payload:
+
+::
+
+  {
+    "_id": "1",
+    "properties": {
+        "foo": "bar",
+        "zoo": 1,
+        "baz": [1,2,3]
+    },
+    "operation": "some-named-operation",
+    "payload": "<some>string-value</some>"
+  }
+
+Object as payload (set operation ``payload-type`` to "json", "json-transit" or "form"  in the :ref:`REST system <rest_system>` the sink uses):
+
+::
+
+  {
+    "_id": "2",
+    "properties": {
+        "foo": "bar",
+        "zoo": 1,
+        "baz": [1,2,3]
+    },
+    "operation": "some-other-operation",
+    "payload": {
+        "payload": "property",
+        "child": {
+          "foo": "bar"
+        }
+    }
+  }
+
+Multi-part form request if ``payload-type`` is "form", otherwise use "json" or "json-transit" for this type of entity:
+
+::
+
+  {
+    "_id": "3",
+    "operation": "some-third-operation",
+    "payload": [
+      {
+        "foo": "bar"
+      },
+      {
+        "zoo": "foo"
+      }
+    ]
+  }
+
+Example configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+See the :ref:`REST system example <rest_system_example>` section for how to configure the operations we refer to in these exapmles:
+
+::
+
+    {
+        "type" : "pipe",
+        "transform" : {
+            "type" : "rest",
+            "system" : "our-rest-service",
+        }
+    }
+
+Example input entities:
+
+::
+
+    [
+        {
+            "_id": "john",
+            "operation": "get-man",
+            "properties": {
+                "id": "john",
+                "age": 21,
+                "sex": "M",
+                "collection_name": "study-group-1"
+            },
+            "payload": "<man id=\"john\">john</man>"
+        },
+        {
+            "_id": "mary",
+            "operation": "update-woman",
+            "properties": {
+                "id": "mary",
+                "age": 23,
+                "sex": "F",
+                "collection_name": "study-group-2"
+            },
+            "payload": {
+              "id": "mary",
+              "age": 23
+            }
+        },
+        {
+            "_id": "bob",
+            "operation": "delete-man",
+            "properties": {
+                "collection_name": "study-group-1"
+            }
+        }
+    ]
+
+
 
 .. _sink_section:
 
@@ -5978,7 +6183,7 @@ Properties
           source that uses the system will be shifted from the specified
           timezone to UTC. Note that the ``_updated`` property will
           not be shifted.
-          
+
      - "UTC"
      -
 
