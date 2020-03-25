@@ -3873,14 +3873,13 @@ Example input entities:
 ::
 
     [
-        {
-            "_id": "john",
-            "operation": "get-man",
-            "properties": {
-                "id": "john"
-            },
-            "payload": "<man id=\"john\">john</man>"
-        }
+      {
+          "_id": "bob",
+          "operation": "get-man",
+          "properties": {
+              "collection_name": "study-group-1"
+          }
+      }
     ]
 
 
@@ -7360,6 +7359,10 @@ Prototype
         "connect_timeout": 60,
         "read_timeout": 1800,
         "operations": {
+            "get-operation": {
+                "url" : "/a/service/that/supports/get/{{ _id }}",
+                "method": "GET"
+            },
             "delete-operation": {
                 "url" : "/a/service/that/supports/delete/{{ _id }}",
                 "method": "DELETE"
@@ -7483,6 +7486,10 @@ Example configuration
         "url_pattern": "http://our.domain.com/api/%s",
         "type": "system:rest",
         "operations": {
+            "get-man": {
+                "url" : "men/{{ properties.collection_name }}/{{ _id }}",
+                "method": "GET"
+            },
            "delete-man": {
                "url" : "men/{{ properties.collection_name }}/{{ _id }}",
                "method": "DELETE"
