@@ -7490,6 +7490,10 @@ Example configuration
                 "url" : "men/{{ properties.collection_name }}/{{ _id }}",
                 "method": "GET"
             },
+            "get-woman": {
+                "url" : "women/{{ properties.collection_name }}/{{ _id }}",
+                "method": "GET"
+            },
            "delete-man": {
                "url" : "men/{{ properties.collection_name }}/{{ _id }}",
                "method": "DELETE"
