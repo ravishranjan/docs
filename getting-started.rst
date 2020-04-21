@@ -1215,6 +1215,17 @@ When communicating with the API we use requests methods such as **GET**, **POST*
 	* **GET**: The GET method request a representation of the data from a web resource, i.e. it reads data.
 	* **POST**: The POST method request that the web resource accepts the data in the request, i.e. it writes data.
 
+.. _getting-started-Sesam client:
+
+Sesam Client
+----
+This tutorial is for Windows users, but a lot of it can be done in a very similar fashion with Mac/Linux. For example in step 1, Mac/Linux users can use their regular terminal. They don't need Git bash.
+
+1. Install Git bash
+
+	* Install Git bash from `here <https://git-scm.com/downloads/>`_ .
+    	* This shell script will come handy when interacting with Sesam and pulling/pushing from the repository (for version control) you're connected to
+
 .. _getting-started-labs:
 
 Labs
